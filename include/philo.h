@@ -3,6 +3,7 @@
 
 # include <pthread.h>
 # include <stddef.h>
+# include <sys/time.h>
 
 # define PHILO_OK 0
 # define PHILO_ERR 1
@@ -48,5 +49,7 @@ struct s_table
 int	philo_parse_args(int argc, char **argv, t_config *config);
 int	philo_table_init(t_table *table, const t_config *config);
 void	philo_table_destroy(t_table *table);
+long	philo_now_ms(void);
+void	philo_sleep_ms(t_table *table, long duration_ms);
 
 #endif

@@ -9,7 +9,8 @@ OBJ_DIR := .obj
 SRCS := \
 	$(SRC_DIR)/init.c \
 	$(SRC_DIR)/main.c \
-	$(SRC_DIR)/parse.c
+	$(SRC_DIR)/parse.c \
+	$(SRC_DIR)/time.c
 OBJS := $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
 .PHONY: all bonus clean fclean re
