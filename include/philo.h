@@ -53,6 +53,7 @@ int	philo_has_ended(t_table *table);
 void	philo_finish(t_table *table);
 void	philo_log(t_philo *philo, const char *message);
 void	philo_log_death(t_philo *philo);
+void	*philo_routine(void *arg);
 long	philo_now_ms(void);
 void	philo_sleep_ms(t_table *table, long duration_ms);
 
