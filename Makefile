@@ -12,6 +12,7 @@ SRCS := \
 	$(SRC_DIR)/monitor.c \
 	$(SRC_DIR)/parse.c \
 	$(SRC_DIR)/routine.c \
+	$(SRC_DIR)/run.c \
 	$(SRC_DIR)/state.c \
 	$(SRC_DIR)/time.c
 OBJS := $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
