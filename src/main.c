@@ -12,12 +12,24 @@ static void	print_usage(void)
 int	main(int argc, char **argv)
 {
 	t_config	config;
+	t_table		table;
 
 	if (philo_parse_args(argc, argv, &config) != PHILO_OK)
 	{
 		print_usage();
 		return (1);
 	}
-	(void)config;
+	if (philo_table_init(&table, &config) != PHILO_OK)
+	{
+		write(2, "Error: failed to initialize table\n", 34);
+		return (1);
+	}
+	if (philo_run(&table) != PHILO_OK)
+	{
+		philo_table_destroy(&table);
+		write(2, "Error: failed to run philosophers\n", 34);
+		return (1);
+	}
+	philo_table_destroy(&table);
 	return (0);
 }
