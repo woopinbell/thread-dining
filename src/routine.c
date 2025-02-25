@@ -40,17 +40,25 @@ static void	record_meal_done(t_philo *philo)
 	philo->meals++;
 	if (table->config.has_meal_limit && philo->meals == table->config.must_eat)
 		table->full_count++;
+	if (table->config.has_meal_limit && table->full_count >= table->config.number)
+		table->ended = 1;
 	pthread_mutex_unlock(&table->state_mutex);
 }
 
-static void	eat_once(t_philo *philo)
+static int	eat_once(t_philo *philo)
 {
 	lock_forks(philo);
+	if (philo_has_ended(philo->table))
+	{
+		unlock_forks(philo);
+		return (PHILO_ERR);
+	}
 	record_meal_start(philo);
 	philo_log(philo, "is eating");
 	philo_sleep_ms(philo->table, philo->table->config.time_to_eat);
 	record_meal_done(philo);
 	unlock_forks(philo);
+	return (PHILO_OK);
 }
 
 static void	wait_single_philo(t_philo *philo)
@@ -75,7 +83,10 @@ void	*philo_routine(void *arg)
 		philo_sleep_ms(philo->table, 1);
 	while (!philo_has_ended(philo->table))
 	{
-		eat_once(philo);
+		if (eat_once(philo) != PHILO_OK)
+			break ;
+		if (philo_has_ended(philo->table))
+			break ;
 		philo_log(philo, "is sleeping");
 		philo_sleep_ms(philo->table, philo->table->config.time_to_sleep);
 		philo_log(philo, "is thinking");
