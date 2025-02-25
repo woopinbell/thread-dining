@@ -53,11 +53,24 @@ static void	eat_once(t_philo *philo)
 	unlock_forks(philo);
 }
 
+static void	wait_single_philo(t_philo *philo)
+{
+	pthread_mutex_lock(philo->left_fork);
+	philo_log(philo, "has taken a fork");
+	philo_sleep_ms(philo->table, philo->table->config.time_to_die + 1);
+	pthread_mutex_unlock(philo->left_fork);
+}
+
 void	*philo_routine(void *arg)
 {
 	t_philo	*philo;
 
 	philo = (t_philo *)arg;
+	if (philo->table->config.number == 1)
+	{
+		wait_single_philo(philo);
+		return (NULL);
+	}
 	if (philo->id % 2 == 0)
 		philo_sleep_ms(philo->table, 1);
 	while (!philo_has_ended(philo->table))
