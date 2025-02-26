@@ -39,11 +39,14 @@ int	philo_parse_args(int argc, char **argv, t_config *config)
 	if (parse_positive_long(argv[1], &value) != PHILO_OK || value > 200)
 		return (PHILO_ERR);
 	config->number = (int)value;
-	if (parse_positive_long(argv[2], &config->time_to_die) != PHILO_OK)
+	if (parse_positive_long(argv[2], &config->time_to_die) != PHILO_OK
+		|| config->time_to_die > INT_MAX)
 		return (PHILO_ERR);
-	if (parse_positive_long(argv[3], &config->time_to_eat) != PHILO_OK)
+	if (parse_positive_long(argv[3], &config->time_to_eat) != PHILO_OK
+		|| config->time_to_eat > INT_MAX)
 		return (PHILO_ERR);
-	if (parse_positive_long(argv[4], &config->time_to_sleep) != PHILO_OK)
+	if (parse_positive_long(argv[4], &config->time_to_sleep) != PHILO_OK
+		|| config->time_to_sleep > INT_MAX)
 		return (PHILO_ERR);
 	config->must_eat = 0;
 	config->has_meal_limit = (argc == 6);
