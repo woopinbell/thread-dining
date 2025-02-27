@@ -17,7 +17,7 @@ SRCS := \
 	$(SRC_DIR)/time.c
 OBJS := $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
-.PHONY: all bonus clean fclean re
+.PHONY: all bonus clean fclean re test
 
 all: $(NAME)
 
@@ -39,3 +39,6 @@ fclean: clean
 	rm -f $(NAME)
 
 re: fclean all
+
+test: all
+	./tests/smoke.sh

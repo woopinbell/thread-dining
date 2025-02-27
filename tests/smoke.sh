@@ -1,0 +1,75 @@
+#!/bin/sh
+
+set -eu
+
+ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+TMP_DIR=$(mktemp -d)
+
+cleanup()
+{
+	rm -rf "$TMP_DIR"
+}
+
+fail()
+{
+	printf 'smoke: %s\n' "$1" >&2
+	exit 1
+}
+
+run_timeout()
+{
+	limit=$1
+	outfile=$2
+	shift 2
+	"$@" >"$outfile" 2>&1 &
+	pid=$!
+	(
+		sleep "$limit"
+		kill -TERM "$pid" 2>/dev/null || true
+	) &
+	guard=$!
+	set +e
+	wait "$pid"
+	status=$?
+	set -e
+	kill "$guard" 2>/dev/null || true
+	wait "$guard" 2>/dev/null || true
+	return "$status"
+}
+
+trap cleanup EXIT INT TERM
+
+make -C "$ROOT_DIR" >/dev/null
+
+invalid_out="$TMP_DIR/invalid.out"
+if "$ROOT_DIR/philo" 0 100 10 10 >"$invalid_out" 2>&1; then
+	fail 'invalid philosopher count succeeded'
+fi
+grep -q 'Usage: ./philo' "$invalid_out" || fail 'invalid args did not print usage'
+
+overflow_out="$TMP_DIR/overflow.out"
+if "$ROOT_DIR/philo" 2 999999999999999999999 10 10 >"$overflow_out" 2>&1; then
+	fail 'overflow argument succeeded'
+fi
+
+single_out="$TMP_DIR/single.out"
+run_timeout 2 "$single_out" "$ROOT_DIR/philo" 1 80 40 40 \
+	|| fail 'single philosopher did not exit cleanly'
+grep -q '1 has taken a fork' "$single_out" || fail 'single philosopher missed fork log'
+grep -q '1 died' "$single_out" || fail 'single philosopher missed death log'
+
+finite_out="$TMP_DIR/finite.out"
+run_timeout 3 "$finite_out" "$ROOT_DIR/philo" 2 250 50 50 2 \
+	|| fail 'finite meal run did not exit cleanly'
+grep -q 'died' "$finite_out" && fail 'finite meal run had a death'
+eat_count=$(grep -c 'is eating' "$finite_out" || true)
+[ "$eat_count" -ge 4 ] || fail 'finite meal run did not eat enough'
+
+nodeath_out="$TMP_DIR/nodeath.out"
+run_timeout 5 "$nodeath_out" "$ROOT_DIR/philo" 5 800 100 100 3 \
+	|| fail 'no-death meal run did not exit cleanly'
+grep -q 'died' "$nodeath_out" && fail 'no-death meal run had a death'
+eat_count=$(grep -c 'is eating' "$nodeath_out" || true)
+[ "$eat_count" -ge 15 ] || fail 'no-death meal run did not reach meal count'
+
+printf 'smoke: ok\n'
