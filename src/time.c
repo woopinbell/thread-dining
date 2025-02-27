@@ -13,6 +13,7 @@ long	philo_now_ms(void)
 void	philo_sleep_ms(t_table *table, long duration_ms)
 {
 	long	deadline;
+	long	remaining;
 	int		ended;
 
 	deadline = philo_now_ms() + duration_ms;
@@ -23,6 +24,10 @@ void	philo_sleep_ms(t_table *table, long duration_ms)
 		pthread_mutex_unlock(&table->state_mutex);
 		if (ended)
 			break ;
-		usleep(500);
+		remaining = deadline - philo_now_ms();
+		if (remaining > 1)
+			usleep(500);
+		else
+			usleep(100);
 	}
 }
