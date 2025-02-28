@@ -27,11 +27,7 @@ static int	init_forks(t_table *table, int count)
 	while (i < count)
 	{
 		if (pthread_mutex_init(&table->forks[i], NULL) != 0)
-		{
-			while (--i >= 0)
-				pthread_mutex_destroy(&table->forks[i]);
 			return (PHILO_ERR);
-		}
 		table->fork_count++;
 		i++;
 	}
@@ -65,20 +61,23 @@ int	philo_table_init(t_table *table, const t_config *config)
 
 void	philo_table_destroy(t_table *table)
 {
-	int	i;
-
 	if (table == NULL)
 		return ;
-	i = 0;
 	if (table->forks != NULL)
 	{
-		while (i < table->fork_count)
-			pthread_mutex_destroy(&table->forks[i++]);
+		while (table->fork_count > 0)
+			pthread_mutex_destroy(&table->forks[--table->fork_count]);
 	}
 	if (table->print_ready)
+	{
 		pthread_mutex_destroy(&table->print_mutex);
+		table->print_ready = 0;
+	}
 	if (table->state_ready)
+	{
 		pthread_mutex_destroy(&table->state_mutex);
+		table->state_ready = 0;
+	}
 	free(table->forks);
 	free(table->philos);
 	table->forks = NULL;
