@@ -16,6 +16,15 @@ fail()
 	exit 1
 }
 
+check_log_format()
+{
+	awk '
+		/^[0-9]+ [1-9][0-9]* (has taken a fork|is eating|is sleeping|is thinking|died)$/ { next }
+		{ bad = 1 }
+		END { exit bad }
+	' "$1" || fail "bad log format in $1"
+}
+
 run_timeout()
 {
 	limit=$1
@@ -55,12 +64,14 @@ fi
 single_out="$TMP_DIR/single.out"
 run_timeout 2 "$single_out" "$ROOT_DIR/philo" 1 80 40 40 \
 	|| fail 'single philosopher did not exit cleanly'
+check_log_format "$single_out"
 grep -q '1 has taken a fork' "$single_out" || fail 'single philosopher missed fork log'
 grep -q '1 died' "$single_out" || fail 'single philosopher missed death log'
 
 finite_out="$TMP_DIR/finite.out"
 run_timeout 3 "$finite_out" "$ROOT_DIR/philo" 2 250 50 50 2 \
 	|| fail 'finite meal run did not exit cleanly'
+check_log_format "$finite_out"
 grep -q 'died' "$finite_out" && fail 'finite meal run had a death'
 eat_count=$(grep -c 'is eating' "$finite_out" || true)
 [ "$eat_count" -ge 4 ] || fail 'finite meal run did not eat enough'
@@ -68,6 +79,7 @@ eat_count=$(grep -c 'is eating' "$finite_out" || true)
 nodeath_out="$TMP_DIR/nodeath.out"
 run_timeout 5 "$nodeath_out" "$ROOT_DIR/philo" 5 800 100 100 3 \
 	|| fail 'no-death meal run did not exit cleanly'
+check_log_format "$nodeath_out"
 grep -q 'died' "$nodeath_out" && fail 'no-death meal run had a death'
 eat_count=$(grep -c 'is eating' "$nodeath_out" || true)
 [ "$eat_count" -ge 15 ] || fail 'no-death meal run did not reach meal count'
