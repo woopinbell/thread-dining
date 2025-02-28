@@ -50,6 +50,15 @@ trap cleanup EXIT INT TERM
 
 make -C "$ROOT_DIR" >/dev/null
 
+cc -Wall -Wextra -Werror -pthread -I"$ROOT_DIR/include" \
+	-Dpthread_mutex_init=test_mutex_init \
+	-Dpthread_mutex_destroy=test_mutex_destroy \
+	-c "$ROOT_DIR/src/init.c" -o "$TMP_DIR/init_failure_init.o"
+cc -Wall -Wextra -Werror -pthread -I"$ROOT_DIR/include" \
+	"$ROOT_DIR/tests/init_failure.c" "$TMP_DIR/init_failure_init.o" \
+	-o "$TMP_DIR/init_failure"
+"$TMP_DIR/init_failure" || fail 'partial mutex initialization cleanup failed'
+
 invalid_out="$TMP_DIR/invalid.out"
 if "$ROOT_DIR/philo" 0 100 10 10 >"$invalid_out" 2>&1; then
 	fail 'invalid philosopher count succeeded'
