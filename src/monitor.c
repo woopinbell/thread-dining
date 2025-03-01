@@ -8,7 +8,7 @@ static int	all_meals_done(t_table *table)
 		&& table->full_count >= table->config.number);
 }
 
-static t_philo	*find_dead_philo(t_table *table, long now)
+static t_philo	*find_dead_philo(t_table *table, int64_t now)
 {
 	int	i;
 
@@ -25,7 +25,7 @@ static t_philo	*find_dead_philo(t_table *table, long now)
 void	philo_monitor(t_table *table)
 {
 	t_philo	*dead;
-	long	now;
+	int64_t	now;
 
 	while (!philo_has_ended(table))
 	{

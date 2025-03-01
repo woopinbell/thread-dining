@@ -2,18 +2,27 @@
 
 #include <unistd.h>
 
-long	philo_now_ms(void)
+static void	clock_failure(void)
 {
-	struct timeval	tv;
+	static const char	message[] = "Error: monotonic clock unavailable\n";
 
-	gettimeofday(&tv, NULL);
-	return ((tv.tv_sec * 1000L) + (tv.tv_usec / 1000L));
+	(void)write(2, message, sizeof(message) - 1);
+	_exit(PHILO_ERR);
 }
 
-void	philo_sleep_ms(t_table *table, long duration_ms)
+int64_t	philo_now_ms(void)
 {
-	long	deadline;
-	long	remaining;
+	struct timespec	now;
+
+	if (clock_gettime(CLOCK_MONOTONIC, &now) != 0)
+		clock_failure();
+	return (((int64_t)now.tv_sec * 1000) + (now.tv_nsec / 1000000));
+}
+
+void	philo_sleep_ms(t_table *table, int64_t duration_ms)
+{
+	int64_t	deadline;
+	int64_t	remaining;
 	int		ended;
 
 	deadline = philo_now_ms() + duration_ms;

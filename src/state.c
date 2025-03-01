@@ -22,14 +22,14 @@ void	philo_finish(t_table *table)
 void	philo_log(t_philo *philo, const char *message)
 {
 	t_table	*table;
-	long	timestamp;
+	int64_t	timestamp;
 
 	table = philo->table;
 	pthread_mutex_lock(&table->print_mutex);
 	if (!philo_has_ended(table))
 	{
 		timestamp = philo_now_ms() - table->start_ms;
-		printf("%ld %d %s\n", timestamp, philo->id, message);
+		printf("%lld %d %s\n", (long long)timestamp, philo->id, message);
 	}
 	pthread_mutex_unlock(&table->print_mutex);
 }
@@ -37,7 +37,7 @@ void	philo_log(t_philo *philo, const char *message)
 void	philo_log_death(t_philo *philo)
 {
 	t_table	*table;
-	long	timestamp;
+	int64_t	timestamp;
 	int		should_print;
 
 	table = philo->table;
@@ -49,7 +49,7 @@ void	philo_log_death(t_philo *philo)
 	{
 		pthread_mutex_lock(&table->print_mutex);
 		timestamp = philo_now_ms() - table->start_ms;
-		printf("%ld %d died\n", timestamp, philo->id);
+		printf("%lld %d died\n", (long long)timestamp, philo->id);
 		pthread_mutex_unlock(&table->print_mutex);
 	}
 }
