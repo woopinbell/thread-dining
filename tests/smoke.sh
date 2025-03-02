@@ -59,6 +59,14 @@ cc -Wall -Wextra -Werror -pthread -I"$ROOT_DIR/include" \
 	-o "$TMP_DIR/init_failure"
 "$TMP_DIR/init_failure" || fail 'partial mutex initialization cleanup failed'
 
+cc -Wall -Wextra -Werror -pthread -I"$ROOT_DIR/include" \
+	-Dclock_gettime=test_clock_gettime \
+	-c "$ROOT_DIR/src/time.c" -o "$TMP_DIR/monotonic_time.o"
+cc -Wall -Wextra -Werror -pthread -I"$ROOT_DIR/include" \
+	"$ROOT_DIR/tests/monotonic_clock.c" "$TMP_DIR/monotonic_time.o" \
+	-o "$TMP_DIR/monotonic_clock"
+"$TMP_DIR/monotonic_clock" || fail 'elapsed time did not use a monotonic clock'
+
 invalid_out="$TMP_DIR/invalid.out"
 if "$ROOT_DIR/philo" 0 100 10 10 >"$invalid_out" 2>&1; then
 	fail 'invalid philosopher count succeeded'
