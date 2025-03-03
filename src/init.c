@@ -42,7 +42,11 @@ int	philo_table_init(t_table *table, const t_config *config)
 	table->full_count = 0;
 	table->fork_count = 0;
 	table->state_ready = 0;
+	table->start_cond_ready = 0;
 	table->print_ready = 0;
+	table->start_released = 0;
+	table->ready_count = 0;
+	table->run_error = 0;
 	table->forks = malloc(sizeof(*table->forks) * config->number);
 	table->philos = malloc(sizeof(*table->philos) * config->number);
 	if (table->forks == NULL || table->philos == NULL)
@@ -50,6 +54,9 @@ int	philo_table_init(t_table *table, const t_config *config)
 	if (pthread_mutex_init(&table->state_mutex, NULL) != 0)
 		return (philo_table_destroy(table), PHILO_ERR);
 	table->state_ready = 1;
+	if (pthread_cond_init(&table->start_cond, NULL) != 0)
+		return (philo_table_destroy(table), PHILO_ERR);
+	table->start_cond_ready = 1;
 	if (pthread_mutex_init(&table->print_mutex, NULL) != 0)
 		return (philo_table_destroy(table), PHILO_ERR);
 	table->print_ready = 1;
@@ -72,6 +79,11 @@ void	philo_table_destroy(t_table *table)
 	{
 		pthread_mutex_destroy(&table->print_mutex);
 		table->print_ready = 0;
+	}
+	if (table->start_cond_ready)
+	{
+		pthread_cond_destroy(&table->start_cond);
+		table->start_cond_ready = 0;
 	}
 	if (table->state_ready)
 	{

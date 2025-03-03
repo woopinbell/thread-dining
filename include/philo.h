@@ -40,9 +40,14 @@ struct s_table
 	int				full_count;
 	int				fork_count;
 	int				state_ready;
+	int				start_cond_ready;
 	int				print_ready;
+	int				start_released;
+	int				ready_count;
+	int				run_error;
 	pthread_mutex_t	*forks;
 	pthread_mutex_t	state_mutex;
+	pthread_cond_t	start_cond;
 	pthread_mutex_t	print_mutex;
 	t_philo			*philos;
 };

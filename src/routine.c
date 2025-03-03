@@ -1,5 +1,30 @@
 #include "philo.h"
 
+static int	wait_for_start(t_philo *philo)
+{
+	t_table	*table;
+	int		ended;
+
+	table = philo->table;
+	pthread_mutex_lock(&table->state_mutex);
+	table->ready_count++;
+	pthread_cond_broadcast(&table->start_cond);
+	while (!table->start_released)
+	{
+		if (pthread_cond_wait(&table->start_cond,
+				&table->state_mutex) != 0)
+		{
+			table->run_error = 1;
+			table->ended = 1;
+			table->start_released = 1;
+			pthread_cond_broadcast(&table->start_cond);
+		}
+	}
+	ended = table->ended;
+	pthread_mutex_unlock(&table->state_mutex);
+	return (ended);
+}
+
 static void	lock_forks(t_philo *philo)
 {
 	if (philo->id % 2 == 0)
@@ -74,6 +99,8 @@ void	*philo_routine(void *arg)
 	t_philo	*philo;
 
 	philo = (t_philo *)arg;
+	if (wait_for_start(philo))
+		return (NULL);
 	if (philo->table->config.number == 1)
 	{
 		wait_single_philo(philo);
