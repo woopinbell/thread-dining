@@ -67,6 +67,21 @@ cc -Wall -Wextra -Werror -pthread -I"$ROOT_DIR/include" \
 	-o "$TMP_DIR/monotonic_clock"
 "$TMP_DIR/monotonic_clock" || fail 'elapsed time did not use a monotonic clock'
 
+cc -Wall -Wextra -Werror -pthread -I"$ROOT_DIR/include" \
+	-Dpthread_create=test_pthread_create \
+	-c "$ROOT_DIR/src/run.c" -o "$TMP_DIR/start_barrier_run.o"
+cc -Wall -Wextra -Werror -pthread -I"$ROOT_DIR/include" \
+	"$ROOT_DIR/tests/start_barrier.c" \
+	"$ROOT_DIR/src/init.c" \
+	"$ROOT_DIR/src/monitor.c" \
+	"$ROOT_DIR/src/routine.c" \
+	"$ROOT_DIR/src/state.c" \
+	"$ROOT_DIR/src/time.c" \
+	"$TMP_DIR/start_barrier_run.o" \
+	-o "$TMP_DIR/start_barrier"
+"$TMP_DIR/start_barrier" >"$TMP_DIR/start_barrier.out" \
+	|| fail 'workers did not share one release timestamp'
+
 invalid_out="$TMP_DIR/invalid.out"
 if "$ROOT_DIR/philo" 0 100 10 10 >"$invalid_out" 2>&1; then
 	fail 'invalid philosopher count succeeded'
