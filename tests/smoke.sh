@@ -82,6 +82,24 @@ cc -Wall -Wextra -Werror -pthread -I"$ROOT_DIR/include" \
 "$TMP_DIR/start_barrier" >"$TMP_DIR/start_barrier.out" \
 	|| fail 'workers did not share one release timestamp'
 
+cc -Wall -Wextra -Werror -pthread -I"$ROOT_DIR/include" \
+	-Dpthread_cond_wait=test_pthread_cond_wait \
+	-c "$ROOT_DIR/src/routine.c" -o "$TMP_DIR/worker_wait_routine.o"
+cc -Wall -Wextra -Werror -pthread -I"$ROOT_DIR/include" \
+	"$ROOT_DIR/tests/worker_wait_failure.c" \
+	"$ROOT_DIR/src/init.c" \
+	"$ROOT_DIR/src/monitor.c" \
+	"$ROOT_DIR/src/run.c" \
+	"$ROOT_DIR/src/state.c" \
+	"$ROOT_DIR/src/time.c" \
+	"$TMP_DIR/worker_wait_routine.o" \
+	-o "$TMP_DIR/worker_wait_failure"
+run_timeout 5 "$TMP_DIR/worker_wait_failure.out" \
+	"$TMP_DIR/worker_wait_failure" \
+	|| fail 'worker condition wait failure was not propagated'
+grep -q 'worker wait failure: ok' "$TMP_DIR/worker_wait_failure.out" \
+	|| fail 'worker condition wait failure test did not finish'
+
 invalid_out="$TMP_DIR/invalid.out"
 if "$ROOT_DIR/philo" 0 100 10 10 >"$invalid_out" 2>&1; then
 	fail 'invalid philosopher count succeeded'
