@@ -60,7 +60,7 @@ void	philo_monitor(t_table *table);
 int	philo_has_ended(t_table *table);
 void	philo_finish(t_table *table);
 void	philo_log(t_philo *philo, const char *message);
-void	philo_log_death(t_philo *philo);
+int	philo_try_log_death(t_philo *philo);
 void	*philo_routine(void *arg);
 int64_t	philo_now_ms(void);
 void	philo_sleep_ms(t_table *table, int64_t duration_ms);

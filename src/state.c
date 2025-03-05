@@ -34,22 +34,29 @@ void	philo_log(t_philo *philo, const char *message)
 	pthread_mutex_unlock(&table->print_mutex);
 }
 
-void	philo_log_death(t_philo *philo)
+int	philo_try_log_death(t_philo *philo)
 {
 	t_table	*table;
+	int64_t	now;
 	int64_t	timestamp;
 	int		should_print;
 
 	table = philo->table;
+	should_print = 0;
+	timestamp = 0;
+	pthread_mutex_lock(&table->print_mutex);
 	pthread_mutex_lock(&table->state_mutex);
-	should_print = !table->ended;
-	table->ended = 1;
+	now = philo_now_ms();
+	if (!table->ended
+		&& now - philo->last_meal_ms >= table->config.time_to_die)
+	{
+		table->ended = 1;
+		timestamp = now - table->start_ms;
+		should_print = 1;
+	}
 	pthread_mutex_unlock(&table->state_mutex);
 	if (should_print)
-	{
-		pthread_mutex_lock(&table->print_mutex);
-		timestamp = philo_now_ms() - table->start_ms;
 		printf("%lld %d died\n", (long long)timestamp, philo->id);
-		pthread_mutex_unlock(&table->print_mutex);
-	}
+	pthread_mutex_unlock(&table->print_mutex);
+	return (should_print);
 }
