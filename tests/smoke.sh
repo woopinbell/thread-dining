@@ -100,6 +100,19 @@ run_timeout 5 "$TMP_DIR/worker_wait_failure.out" \
 grep -q 'worker wait failure: ok' "$TMP_DIR/worker_wait_failure.out" \
 	|| fail 'worker condition wait failure test did not finish'
 
+cc -Wall -Wextra -Werror -pthread -I"$ROOT_DIR/include" \
+	-Dpthread_mutex_unlock=test_mutex_unlock \
+	-c "$ROOT_DIR/src/monitor.c" -o "$TMP_DIR/terminal_monitor.o"
+cc -Wall -Wextra -Werror -pthread -I"$ROOT_DIR/include" \
+	"$ROOT_DIR/tests/terminal_state.c" \
+	"$ROOT_DIR/src/init.c" \
+	"$ROOT_DIR/src/state.c" \
+	"$ROOT_DIR/src/time.c" \
+	"$TMP_DIR/terminal_monitor.o" -o "$TMP_DIR/terminal_state"
+"$TMP_DIR/terminal_state" >"$TMP_DIR/terminal_state.out" \
+	|| fail 'terminal state was not committed atomically'
+grep -q 'died' "$TMP_DIR/terminal_state.out" && fail 'stale death was printed'
+
 invalid_out="$TMP_DIR/invalid.out"
 if "$ROOT_DIR/philo" 0 100 10 10 >"$invalid_out" 2>&1; then
 	fail 'invalid philosopher count succeeded'
