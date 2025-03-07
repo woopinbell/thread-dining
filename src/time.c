@@ -19,21 +19,25 @@ int64_t	philo_now_ms(void)
 	return (((int64_t)now.tv_sec * 1000) + (now.tv_nsec / 1000000));
 }
 
-void	philo_sleep_ms(t_table *table, int64_t duration_ms)
+int	philo_sleep_ms(t_table *table, int64_t duration_ms)
 {
 	int64_t	deadline;
+	int64_t	now;
 	int64_t	remaining;
 	int		ended;
 
 	deadline = philo_now_ms() + duration_ms;
-	while (philo_now_ms() < deadline)
+	while (1)
 	{
+		now = philo_now_ms();
+		if (now >= deadline)
+			return (PHILO_OK);
 		pthread_mutex_lock(&table->state_mutex);
 		ended = table->ended;
 		pthread_mutex_unlock(&table->state_mutex);
 		if (ended)
-			break ;
-		remaining = deadline - philo_now_ms();
+			return (PHILO_ERR);
+		remaining = deadline - now;
 		if (remaining > 1)
 			usleep(500);
 		else
