@@ -8,6 +8,7 @@
 
 # define PHILO_OK 0
 # define PHILO_ERR 1
+# define PHILO_UNSAFE 2
 
 typedef struct s_table	t_table;
 
@@ -45,6 +46,9 @@ struct s_table
 	int				start_released;
 	int				ready_count;
 	int				run_error;
+	int				threads_started;
+	int				threads_joined;
+	int				destroy_safe;
 	pthread_mutex_t	*forks;
 	pthread_mutex_t	state_mutex;
 	pthread_cond_t	start_cond;
@@ -54,7 +58,7 @@ struct s_table
 
 int	philo_parse_args(int argc, char **argv, t_config *config);
 int	philo_table_init(t_table *table, const t_config *config);
-void	philo_table_destroy(t_table *table);
+int	philo_table_destroy(t_table *table);
 int	philo_run(t_table *table);
 void	philo_monitor(t_table *table);
 int	philo_has_ended(t_table *table);

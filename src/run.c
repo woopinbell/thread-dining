@@ -1,15 +1,24 @@
 #include "philo.h"
 
-static void	join_started(t_table *table, int count)
+static int	join_started(t_table *table, int count)
 {
 	int	i;
+	int	status;
 
 	i = 0;
+	status = PHILO_OK;
 	while (i < count)
 	{
-		pthread_join(table->philos[i].thread, NULL);
+		if (pthread_join(table->philos[i].thread, NULL) == 0)
+			table->threads_joined++;
+		else
+		{
+			table->destroy_safe = 0;
+			status = PHILO_UNSAFE;
+		}
 		i++;
 	}
+	return (status);
 }
 
 
@@ -55,6 +64,7 @@ static int	release_start(t_table *table, int should_end)
 int	philo_run(t_table *table)
 {
 	int	i;
+	int	join_status;
 
 	i = 0;
 	while (i < table->config.number)
@@ -63,17 +73,24 @@ int	philo_run(t_table *table)
 				&table->philos[i]) != 0)
 		{
 			release_start(table, 1);
-			join_started(table, i);
+			join_status = join_started(table, table->threads_started);
+			if (join_status != PHILO_OK)
+				return (join_status);
 			return (PHILO_ERR);
 		}
+		table->threads_started++;
 		i++;
 	}
 	if (release_start(table, 0) != PHILO_OK)
 	{
-		join_started(table, table->config.number);
+		join_status = join_started(table, table->threads_started);
+		if (join_status != PHILO_OK)
+			return (join_status);
 		return (PHILO_ERR);
 	}
 	philo_monitor(table);
-	join_started(table, table->config.number);
+	join_status = join_started(table, table->threads_started);
+	if (join_status != PHILO_OK)
+		return (join_status);
 	return (PHILO_OK);
 }

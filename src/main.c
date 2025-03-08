@@ -22,6 +22,8 @@ int	main(int argc, char **argv)
 {
 	t_config	config;
 	t_table		table;
+	int			run_status;
+	int			cleanup_status;
 
 	if (philo_parse_args(argc, argv, &config) != PHILO_OK)
 	{
@@ -35,12 +37,24 @@ int	main(int argc, char **argv)
 		put_error("Error: failed to initialize table\n");
 		return (1);
 	}
-	if (philo_run(&table) != PHILO_OK)
+	run_status = philo_run(&table);
+	if (run_status == PHILO_UNSAFE)
 	{
-		philo_table_destroy(&table);
+		put_error("Error: worker thread could not be joined\n");
+		_exit(1);
+	}
+	cleanup_status = philo_table_destroy(&table);
+	if (run_status != PHILO_OK)
+	{
+		if (cleanup_status != PHILO_OK)
+			put_error("Error: failed to release table resources\n");
 		put_error("Error: failed to run philosophers\n");
 		return (1);
 	}
-	philo_table_destroy(&table);
+	if (cleanup_status != PHILO_OK)
+	{
+		put_error("Error: failed to release table resources\n");
+		return (1);
+	}
 	return (0);
 }
