@@ -125,6 +125,24 @@ cc -Wall -Wextra -Werror -pthread -I"$ROOT_DIR/include" \
 "$TMP_DIR/interrupted_meal" >"$TMP_DIR/interrupted_meal.out" \
 	|| fail 'interrupted meal changed completion counters'
 
+cc -Wall -Wextra -Werror -pthread -I"$ROOT_DIR/include" \
+	-Dpthread_create=test_pthread_create \
+	-Dpthread_join=test_pthread_join \
+	-c "$ROOT_DIR/src/run.c" -o "$TMP_DIR/lifecycle_run.o"
+cc -Wall -Wextra -Werror -pthread -I"$ROOT_DIR/include" \
+	-Dpthread_mutex_destroy=test_mutex_destroy \
+	-c "$ROOT_DIR/src/init.c" -o "$TMP_DIR/lifecycle_init.o"
+cc -Wall -Wextra -Werror -pthread -I"$ROOT_DIR/include" \
+	"$ROOT_DIR/tests/lifecycle_failure.c" \
+	"$ROOT_DIR/src/monitor.c" \
+	"$ROOT_DIR/src/routine.c" \
+	"$ROOT_DIR/src/state.c" \
+	"$ROOT_DIR/src/time.c" \
+	"$TMP_DIR/lifecycle_run.o" \
+	"$TMP_DIR/lifecycle_init.o" -o "$TMP_DIR/lifecycle_failure"
+run_timeout 8 "$TMP_DIR/lifecycle_failure.out" "$TMP_DIR/lifecycle_failure" \
+	|| fail 'thread lifecycle failure was not propagated safely'
+
 invalid_out="$TMP_DIR/invalid.out"
 if "$ROOT_DIR/philo" 0 100 10 10 >"$invalid_out" 2>&1; then
 	fail 'invalid philosopher count succeeded'
