@@ -143,6 +143,28 @@ cc -Wall -Wextra -Werror -pthread -I"$ROOT_DIR/include" \
 run_timeout 8 "$TMP_DIR/lifecycle_failure.out" "$TMP_DIR/lifecycle_failure" \
 	|| fail 'thread lifecycle failure was not propagated safely'
 
+cc -Wall -Wextra -Werror -pthread -I"$ROOT_DIR/include" \
+	-Dphilo_parse_args=test_parse_args \
+	-Dphilo_table_init=test_table_init \
+	-Dphilo_run=test_run \
+	-Dphilo_table_destroy=test_destroy \
+	-c "$ROOT_DIR/src/main.c" -o "$TMP_DIR/main_unsafe_main.o"
+cc -Wall -Wextra -Werror -pthread -I"$ROOT_DIR/include" \
+	"$ROOT_DIR/tests/main_unsafe.c" "$TMP_DIR/main_unsafe_main.o" \
+	-o "$TMP_DIR/main_unsafe"
+main_unsafe_out="$TMP_DIR/main_unsafe.out"
+if "$TMP_DIR/main_unsafe" 1 2 3 4 >"$main_unsafe_out" 2>&1; then
+	fail 'unsafe join failure returned success'
+fi
+grep -q 'worker thread could not be joined' "$main_unsafe_out" \
+	|| fail 'join failure did not reach main'
+if grep -q 'unsafe destroy called' "$main_unsafe_out"; then
+	fail 'main destroyed resources after join failure'
+fi
+if grep -q 'normal exit hook\|buffered stdio marker' "$main_unsafe_out"; then
+	fail 'unsafe join failure used the normal stdio exit path'
+fi
+
 invalid_out="$TMP_DIR/invalid.out"
 if "$ROOT_DIR/philo" 0 100 10 10 >"$invalid_out" 2>&1; then
 	fail 'invalid philosopher count succeeded'
