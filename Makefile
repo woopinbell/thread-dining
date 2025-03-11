@@ -2,6 +2,8 @@ NAME := philo
 
 CC := cc
 CFLAGS := -Wall -Wextra -Werror -pthread -Iinclude
+TSAN_CC ?= $(CC)
+TSAN_REQUIRED ?= 0
 
 SRC_DIR := src
 OBJ_DIR := .obj
@@ -17,7 +19,7 @@ SRCS := \
 	$(SRC_DIR)/time.c
 OBJS := $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
-.PHONY: all bonus clean fclean re test
+.PHONY: all bonus clean fclean re test test-tsan
 
 all: $(NAME)
 
@@ -43,3 +45,6 @@ re: fclean all
 test: all
 	./tests/smoke.sh
 	./tests/concurrency.sh
+
+test-tsan:
+	TSAN_CC="$(TSAN_CC)" TSAN_REQUIRED="$(TSAN_REQUIRED)" ./tests/tsan.sh
