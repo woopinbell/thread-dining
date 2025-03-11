@@ -25,7 +25,7 @@ typedef struct s_config
 typedef struct s_philo
 {
 	int				id;
-	int				meals;
+	int64_t			meals;
 	int64_t		last_meal_ms;
 	pthread_t		thread;
 	pthread_mutex_t	*left_fork;
