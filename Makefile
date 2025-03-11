@@ -42,3 +42,4 @@ re: fclean all
 
 test: all
 	./tests/smoke.sh
+	./tests/concurrency.sh
