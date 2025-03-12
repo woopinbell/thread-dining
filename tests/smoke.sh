@@ -126,6 +126,19 @@ cc -Wall -Wextra -Werror -pthread -I"$ROOT_DIR/include" \
 	|| fail 'interrupted meal changed completion counters'
 
 cc -Wall -Wextra -Werror -pthread -I"$ROOT_DIR/include" \
+	-Dphilo_sleep_ms=test_philo_sleep_ms \
+	-c "$ROOT_DIR/src/routine.c" -o "$TMP_DIR/meal_counter_range_routine.o"
+cc -Wall -Wextra -Werror -pthread -I"$ROOT_DIR/include" \
+	"$ROOT_DIR/tests/meal_counter_range.c" \
+	"$ROOT_DIR/src/init.c" \
+	"$ROOT_DIR/src/state.c" \
+	"$ROOT_DIR/src/time.c" \
+	"$TMP_DIR/meal_counter_range_routine.o" \
+	-o "$TMP_DIR/meal_counter_range"
+"$TMP_DIR/meal_counter_range" >"$TMP_DIR/meal_counter_range.out" \
+	|| fail 'meal counter did not advance beyond INT_MAX'
+
+cc -Wall -Wextra -Werror -pthread -I"$ROOT_DIR/include" \
 	-Dpthread_create=test_pthread_create \
 	-Dpthread_join=test_pthread_join \
 	-c "$ROOT_DIR/src/run.c" -o "$TMP_DIR/lifecycle_run.o"
