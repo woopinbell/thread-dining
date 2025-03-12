@@ -1,36 +1,63 @@
-# thread-dining
+# Thread dining
 
-`thread-dining`은 식사하는 철학자 문제를 C와 POSIX thread로 구현하는
-프로젝트다. 각 철학자는 독립된 worker로 동작하고 공유 포크의 소유권은
-동기화 객체로 표현한다.
+![Language](https://img.shields.io/badge/language-C-blue?logo=c&logoColor=white)
+![Platform](https://img.shields.io/badge/platform-POSIX-lightgrey)
 
-## 목표
+`thread-dining`은 42 `philo` 과제를 변형한 C 프로젝트입니다. POSIX thread와 mutex를 사용해 식사하는 철학자 문제를 구현하고, thread 수명과 공유 포크의 소유권을 검증합니다.
 
-- 정해진 CLI 입력을 검증해 실행 설정으로 변환한다.
-- 철학자의 식사·수면·사고 흐름을 서로 독립된 worker로 실행한다.
-- 사망 또는 선택적인 식사 횟수 완료 조건에서 전체 실행을 종료한다.
-- 생성한 thread와 동기화 자원의 수명을 명시적으로 관리한다.
+## 실행
 
-## 예정 실행 계약
-
-```text
-./philo number_of_philosophers time_to_die time_to_eat time_to_sleep [number_of_times_each_philosopher_must_eat]
+```sh
+./build/bin/philo number_of_philosophers time_to_die time_to_eat time_to_sleep [number_of_times_each_philosopher_must_eat]
 ```
 
-시간 단위는 밀리초다. 실행 파일 이름은 `philo`로 고정하고 bonus target은
-제공하지 않는다.
+모든 시간 단위는 밀리초입니다.
 
-## 개발 규약
+예시:
 
-- 언어는 C를 사용하고 POSIX thread API에 의존한다.
-- 기본 compiler 경고는 `-Wall -Wextra -Werror`를 적용한다.
-- thread 지원을 위해 compile과 link에 `-pthread`를 사용한다.
-- public 선언은 `include/`, 구현은 `src/`, 검증 코드는 `tests/`에 둔다.
-- 생성된 executable과 object는 Git에 포함하지 않는다.
-- 변경은 하나의 책임 단위로 나누고 각 단계가 독립적으로 build되게 한다.
+```sh
+./build/bin/philo 5 800 200 200
+./build/bin/philo 5 800 200 200 3
+```
 
-## 검증 원칙
+프로그램은 각 철학자의 포크 획득, 식사, 수면, 사고와 사망을 표준 출력에 기록합니다. 선택적인 식사 횟수를 지정하면 모든 철학자가 해당 횟수를 완료한 뒤 종료합니다.
 
-초기에는 compiler 경고 없는 clean build와 대표 CLI 입력을 확인한다. 동시성
-상태가 추가되면 정상 종료, 실패 rollback, 로그 형식과 경쟁 조건을 별도의
-검증 경로로 확장한다.
+## 빌드
+
+저장소 루트에서 실행합니다.
+
+```sh
+make
+```
+
+실행 파일은 `build/bin/philo`, 오브젝트와 dependency 파일은 `build/obj/`에 생성됩니다. bonus target은 제공하지 않습니다.
+
+## 테스트
+
+기본 테스트는 대표적인 정상 실행, 사망 조건, CLI 경계값, mutex 초기화 실패, monotonic clock, thread 시작 장벽과 terminal log race를 검증합니다.
+
+```sh
+make test
+```
+
+ThreadSanitizer 검증은 환경에서 지원되는 경우 다음 명령으로 실행합니다.
+
+```sh
+make test-tsan
+```
+
+TSAN을 반드시 사용할 수 있어야 하는 환경에서는 다음과 같이 실행합니다.
+
+```sh
+make test-tsan TSAN_REQUIRED=1
+```
+
+## 정리
+
+```sh
+make clean  # build/ 및 테스트 캐시 삭제
+make fclean # clean과 동일
+make re     # fclean 후 전체 재빌드
+```
+
+빌드 산출물과 테스트 캐시는 저장소에 포함하지 않습니다.

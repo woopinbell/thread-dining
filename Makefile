@@ -1,50 +1,45 @@
-NAME := philo
+NAME := build/bin/philo
+BIN_DIR := build/bin
+OBJ_DIR := build/obj
 
 CC := cc
-CFLAGS := -Wall -Wextra -Werror -pthread -Iinclude
+CFLAGS := -Wall -Wextra -Werror -pthread -Iinclude -MMD -MP
 TSAN_CC ?= $(CC)
 TSAN_REQUIRED ?= 0
 
-SRC_DIR := src
-OBJ_DIR := .obj
-
-SRCS := \
-	$(SRC_DIR)/init.c \
-	$(SRC_DIR)/main.c \
-	$(SRC_DIR)/monitor.c \
-	$(SRC_DIR)/parse.c \
-	$(SRC_DIR)/routine.c \
-	$(SRC_DIR)/run.c \
-	$(SRC_DIR)/state.c \
-	$(SRC_DIR)/time.c
-OBJS := $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+SRC := $(wildcard src/*.c)
+OBJS := $(patsubst src/%.c,$(OBJ_DIR)/%.o,$(SRC))
 
 .PHONY: all bonus clean fclean re test test-tsan
 
 all: $(NAME)
 
-$(NAME): $(OBJS)
+$(NAME): $(OBJS) | $(BIN_DIR)
 	$(CC) $(CFLAGS) $(OBJS) -o $@
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c include/philo.h
-	@mkdir -p $(dir $@)
+$(OBJ_DIR)/%.o: src/%.c include/philo.h | $(OBJ_DIR)
+	mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BIN_DIR) $(OBJ_DIR):
+	mkdir -p $@
 
 bonus:
 	@printf 'bonus target is unavailable\n'
 	@exit 1
 
 clean:
-	rm -rf $(OBJ_DIR)
+	rm -rf build tests/__pycache__ .pytest_cache
 
 fclean: clean
-	rm -f $(NAME)
 
 re: fclean all
 
 test: all
-	./tests/smoke.sh
-	./tests/concurrency.sh
+	PHILO_BIN="$(CURDIR)/$(NAME)" ./tests/smoke.sh
+	PHILO_BIN="$(CURDIR)/$(NAME)" ./tests/concurrency.sh
 
 test-tsan:
 	TSAN_CC="$(TSAN_CC)" TSAN_REQUIRED="$(TSAN_REQUIRED)" ./tests/tsan.sh
+
+-include $(OBJS:.o=.d)

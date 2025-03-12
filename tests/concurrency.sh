@@ -3,6 +3,7 @@
 set -eu
 
 ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+PHILO_BIN=${PHILO_BIN:-"$ROOT_DIR/build/bin/philo"}
 TMP_DIR=$(mktemp -d)
 
 cleanup()
@@ -82,7 +83,7 @@ make -C "$ROOT_DIR" >/dev/null
 
 for count in 2 5 17; do
 	output="$TMP_DIR/finite-$count.out"
-	run_timeout 6 "$output" "$ROOT_DIR/philo" "$count" 2000 5 5 4 \
+	run_timeout 6 "$output" "$PHILO_BIN" "$count" 2000 5 5 4 \
 		|| fail "finite run for $count philosophers did not finish"
 	check_log "$output"
 	grep -q 'died' "$output" && fail "finite run reported a death"
@@ -92,7 +93,7 @@ done
 iteration=0
 while [ "$iteration" -lt 8 ]; do
 	output="$TMP_DIR/repeat-$iteration.out"
-	run_timeout 4 "$output" "$ROOT_DIR/philo" 7 1000 4 4 3 \
+	run_timeout 4 "$output" "$PHILO_BIN" 7 1000 4 4 3 \
 		|| fail "repeated schedule $iteration did not finish"
 	check_log "$output"
 	grep -q 'died' "$output" && fail "repeated schedule reported a death"
@@ -103,7 +104,7 @@ done
 iteration=0
 while [ "$iteration" -lt 10 ]; do
 	output="$TMP_DIR/death-$iteration.out"
-	run_timeout 3 "$output" "$ROOT_DIR/philo" 5 60 80 10 \
+	run_timeout 3 "$output" "$PHILO_BIN" 5 60 80 10 \
 		|| fail "death schedule $iteration did not finish"
 	check_log "$output"
 	check_terminal_line "$output"

@@ -3,6 +3,7 @@
 set -eu
 
 ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+PHILO_BIN=${PHILO_BIN:-"$ROOT_DIR/build/bin/philo"}
 TMP_DIR=$(mktemp -d)
 
 cleanup()
@@ -179,25 +180,25 @@ if grep -q 'normal exit hook\|buffered stdio marker' "$main_unsafe_out"; then
 fi
 
 invalid_out="$TMP_DIR/invalid.out"
-if "$ROOT_DIR/philo" 0 100 10 10 >"$invalid_out" 2>&1; then
+if "$PHILO_BIN" 0 100 10 10 >"$invalid_out" 2>&1; then
 	fail 'invalid philosopher count succeeded'
 fi
 grep -q 'Usage: ./philo' "$invalid_out" || fail 'invalid args did not print usage'
 
 overflow_out="$TMP_DIR/overflow.out"
-if "$ROOT_DIR/philo" 2 999999999999999999999 10 10 >"$overflow_out" 2>&1; then
+if "$PHILO_BIN" 2 999999999999999999999 10 10 >"$overflow_out" 2>&1; then
 	fail 'overflow argument succeeded'
 fi
 
 single_out="$TMP_DIR/single.out"
-run_timeout 2 "$single_out" "$ROOT_DIR/philo" 1 80 40 40 \
+run_timeout 2 "$single_out" "$PHILO_BIN" 1 80 40 40 \
 	|| fail 'single philosopher did not exit cleanly'
 check_log_format "$single_out"
 grep -q '1 has taken a fork' "$single_out" || fail 'single philosopher missed fork log'
 grep -q '1 died' "$single_out" || fail 'single philosopher missed death log'
 
 finite_out="$TMP_DIR/finite.out"
-run_timeout 3 "$finite_out" "$ROOT_DIR/philo" 2 250 50 50 2 \
+run_timeout 3 "$finite_out" "$PHILO_BIN" 2 250 50 50 2 \
 	|| fail 'finite meal run did not exit cleanly'
 check_log_format "$finite_out"
 grep -q 'died' "$finite_out" && fail 'finite meal run had a death'
@@ -205,7 +206,7 @@ eat_count=$(grep -c 'is eating' "$finite_out" || true)
 [ "$eat_count" -ge 4 ] || fail 'finite meal run did not eat enough'
 
 nodeath_out="$TMP_DIR/nodeath.out"
-run_timeout 5 "$nodeath_out" "$ROOT_DIR/philo" 5 800 100 100 3 \
+run_timeout 5 "$nodeath_out" "$PHILO_BIN" 5 800 100 100 3 \
 	|| fail 'no-death meal run did not exit cleanly'
 check_log_format "$nodeath_out"
 grep -q 'died' "$nodeath_out" && fail 'no-death meal run had a death'
