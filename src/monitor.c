@@ -44,8 +44,12 @@ void	philo_monitor(t_table *table)
 		}
 		dead = find_dead_philo(table, now);
 		pthread_mutex_unlock(&table->state_mutex);
+		// state_mutex는 여기서 먼저 풀어준 뒤 death 처리(출력 포함)를 진행
+        // 출력까지 state_mutex를 쥔 채로 넘어가면 critical section이 길어져, 그동안 다른 철학자들이 last_meal_ms를 갱신하지 못해 식사 판정이 지연될 수 있음
 		if (dead != NULL && philo_try_log_death(dead))
 			return ;
 		usleep(500);
+		// 정확한 사망 시각에 즉시 반응하는 조건변수 방식 대신 500us 간격 폴링을 택함
+        // 철학자마다 개별 타이머를 두는 복잡도 없이, 감지 지연을 500us 이내로 제한하면서 CPU 사용은 낮게 유지하는 절충
 	}
 }

@@ -41,6 +41,8 @@ int	main(int argc, char **argv)
 	if (run_status == PHILO_UNSAFE)
 	{
 		put_error("Error: worker thread could not be joined\n");
+		// join 실패로 인해 스레드가 아직 살아있을 수 있는 상태(UNSAFE)
+        // 이 상태에서 philo_table_destroy를 호출하면 실행 중인 스레드가 참조 중인 mutex를 파괴하는 UB가 될 수 있으므로, 정리를 시도하지 않고 곧바로 프로세스를 종료
 		_exit(1);
 	}
 	cleanup_status = philo_table_destroy(&table);
